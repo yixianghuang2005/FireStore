@@ -14,13 +14,13 @@ class UserScoreViewModel : ViewModel() {
     var message by mutableStateOf("訊息")
         private set
 
-    fun addUser(userScore: UserScoreModel) {
+   /* fun addUser(userScore: UserScoreModel) {
         // 在 viewModelScope 中啟動一個協程
         viewModelScope.launch {
             // 呼叫 suspend function，並等待結果
             message = userScoreRepository.addUser(userScore)
         }
-    }
+    }*/
 
     fun updateUser(userScore: UserScoreModel) {
         // 在 viewModelScope 中啟動一個協程
@@ -35,6 +35,22 @@ class UserScoreViewModel : ViewModel() {
         viewModelScope.launch {
             // 呼叫 suspend function，並等待結果
             message = userScoreRepository.deleteUser(userScore)
+        }
+    }
+
+    fun getUser(userScore: UserScoreModel) {
+        // 在 viewModelScope 中啟動一個協程
+        viewModelScope.launch {
+            // 呼叫 suspend function，並等待結果
+            message = userScoreRepository.getUserScoreByName(userScore)
+        }
+    }
+
+    fun orderUser() {
+        // 在 viewModelScope 中啟動一個協程
+        viewModelScope.launch {
+            // 呼叫 suspend function，並等待結果
+            message = userScoreRepository.orderByScore()
         }
     }
 

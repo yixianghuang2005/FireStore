@@ -1,13 +1,15 @@
 package tw.edu.pu.csim.tcyang.firestore
 
 import com.google.firebase.Firebase
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.toObject
 import kotlinx.coroutines.tasks.await
 
 class UserScoreRepository {
     val db = Firebase.firestore
 
-    suspend fun addUser(userScore: UserScoreModel): String {
+    /*suspend fun addUser(userScore: UserScoreModel): String {
         return try {
             val documentReference =
                 db.collection("UserScore")
@@ -18,7 +20,7 @@ class UserScoreRepository {
             // await() 失敗時會拋出例外，在這裡捕捉並處理
             "新增資料失敗：${e.message}"
         }
-    }
+    }*/
 
     suspend fun updateUser(userScore: UserScoreModel): String {
         return try {
@@ -55,5 +57,57 @@ class UserScoreRepository {
         }
     }
 
+    suspend fun getUserScoreByName(userScore: UserScoreModel): String {
+        return try {
+            var userCondition = "子青"
+            val querySnapshot = db.collection("UserScore")
+                .whereEqualTo("user", userCondition) // 篩選條件
+                .get().await()
+            if (!querySnapshot.isEmpty) {
+                val document = querySnapshot.documents.first() // 取得第一個符合條件的文件
+                val userScore = document.toObject<UserScoreModel>()
+                "查詢成功！${userScore?.user} 的分數是 ${userScore?.score}"
+            } else {
+                "查詢失敗：找不到使用者 $userCondition 的資料。"
+            }
+        } catch (e: Exception) {
+            // await() 失敗時會拋出例外，在這裡捕捉並處理
+            "查詢資料失敗：${e.message}"
+        }
+    }
+
+    suspend fun orderByScore(): String {
+        return try {
+            // 先宣告 message 為空字串，稍後再組裝
+            var resultMessage = "查詢成功！分數由大到小排序為：\n"
+
+            val querySnapshot = db.collection("UserScore")
+                .orderBy("score", Query.Direction.DESCENDING)
+                .limit(3) // 只取前三名
+                .get()
+                .await()
+
+            // 檢查是否有資料
+            if (querySnapshot.isEmpty) {
+                return "抱歉，資料庫目前無相關資料"
+            }
+
+            // 使用 forEachIndexed 來獲取索引 (index)
+            // index 從 0 開始，所以排名就是 index + 1
+            querySnapshot.documents.forEachIndexed { index, document ->
+                val userScore = document.toObject<UserScoreModel>()
+
+                userScore?.let {
+                    val rank = index + 1 // 計算名次 (1, 2, 3...)
+                    resultMessage += "第 $rank 名：${it.user} (分數: ${it.score})\n"
+                }
+            }
+
+            resultMessage
+
+        } catch (e: Exception) {
+            "查詢資料失敗：${e.message}"
+        }
+    }
 
 }
