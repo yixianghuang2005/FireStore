@@ -78,28 +78,30 @@ class UserScoreRepository {
 
     suspend fun orderByScore(): String {
         return try {
-            // 先宣告 message 為空字串，稍後再組裝
             var resultMessage = "查詢成功！分數由大到小排序為：\n"
+
+            // 移除 SimpleDateFormat 的設定
 
             val querySnapshot = db.collection("UserScore")
                 .orderBy("score", Query.Direction.DESCENDING)
-                .limit(3) // 只取前三名
+                .limit(3)
                 .get()
                 .await()
 
-            // 檢查是否有資料
             if (querySnapshot.isEmpty) {
                 return "抱歉，資料庫目前無相關資料"
             }
 
-            // 使用 forEachIndexed 來獲取索引 (index)
-            // index 從 0 開始，所以排名就是 index + 1
             querySnapshot.documents.forEachIndexed { index, document ->
                 val userScore = document.toObject<UserScoreModel>()
 
                 userScore?.let {
-                    val rank = index + 1 // 計算名次 (1, 2, 3...)
+                    val rank = index + 1
+
+                    // 直接顯示 it.timestamp，不做任何轉換
+                    // 如果是 null 則顯示 "null" 或您自訂的字串
                     resultMessage += "第 $rank 名：${it.user} (分數: ${it.score})\n"
+                    resultMessage += "   時間：${it.timestamp}\n"
                 }
             }
 
